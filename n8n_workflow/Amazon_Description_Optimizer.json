@@ -1,0 +1,761 @@
+{
+  "name": "intership",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "googleform",
+        "responseMode": "streaming",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        432
+      ],
+      "id": "0883cae7-c713-4f33-9a4a-8f48e11475e1",
+      "name": "Webhook",
+      "webhookId": "fbf359b0-cc1d-4a6c-883d-ecc8febe7558",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=PRODUCT NAME: {{ $('fix input').item.json.name }}\n\nORIGINAL DESCRIPTION: {{ $('fix input').item.json.description }}\n\nPREDICTED DEMAND SCORE: {{ $json.demand_prob }}\n\nHIGH-IMPACT POSITIVE KEYWORDS: {{$json.top_keywords}}\n\nCATEGORY-AWARE MISSING KEYWORDS: {{ $json.category_missing_keywords }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert Amazon SEO copywriter.\nRewrite the product into an Amazon-optimized listing with a strong title and a detailed description only (no bullet points).\n\n==========================\n\n### AMAZON STYLE REWRITE RULES ###\n- Output ONLY the Title and Description.\n- NO bullet points at all.\n- NO explanations or extra text.\n- Naturally incorporate all high-impact keywords into the title and description.\n- Include missing keywords only if they are relevant and fit naturally.\n- Never invent specifications or features.\n- Optimize both title and description for Amazon SEO.\n- Description should be engaging, persuasive, and 2–4 paragraphs (max ~300-400 words).\n- Use natural, benefit-focused language that appeals to customers.\n\n### REQUIRED FORMAT (DO NOT CHANGE THIS FORMAT) ###\nTITLE:\n<optimized Amazon title>\n\nDESCRIPTION:\n<full Amazon-style description with all key benefits and features naturally written in paragraph form>\n=================================\nNOW PRODUCE THE AMAZON-LISTING REWRITE:"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        48,
+        592
+      ],
+      "id": "95202e5d-e814-4663-8dbe-7bcb6bd5449a",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.huggingface.co/v1/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Authorization\": \"Bearer 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\",\n  \"Content-Type\": \"application/json\"\n}\n",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"Qwen/Qwen3-4B-Instruct-2507\",  \n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.prompt) }}\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 200\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        304
+      ],
+      "id": "51b8d0eb-981c-4802-b74e-6c1fa2b7b947",
+      "name": "hugging face model",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ml_api:8000/predict",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.description }}"
+            },
+            {
+              "name": "Brand",
+              "value": "={{ $json.Brand }}"
+            },
+            {
+              "name": "Material",
+              "value": "={{ $json.Material }}"
+            },
+            {
+              "name": "Color",
+              "value": "={{ $json.Color }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $json.price }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -160,
+        592
+      ],
+      "id": "ed26227b-a1a0-4e8d-9820-6c35bba30d87",
+      "name": "old_score",
+      "alwaysOutputData": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ml_api:8000/predict",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ $('fix input').item.json.name }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.description }}"
+            },
+            {
+              "name": "Brand",
+              "value": "={{ $('fix input').item.json.Brand }}"
+            },
+            {
+              "name": "Material",
+              "value": "={{ $('fix input').item.json.Material }}"
+            },
+            {
+              "name": "Color",
+              "value": "={{ $('fix input').item.json.Color }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $('fix input').item.json.price }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        528,
+        304
+      ],
+      "id": "0a16c1f5-c3e3-4845-95b6-3fea9fbd8911",
+      "name": "ai_score_1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ml_api:8000/predict",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=name",
+              "value": "={{ $('fix input').item.json.name }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.output.DESCRIPTION }}"
+            },
+            {
+              "name": "Brand",
+              "value": "={{ $('fix input').item.json.Brand }}"
+            },
+            {
+              "name": "Material",
+              "value": "={{ $('fix input').item.json.Material }}"
+            },
+            {
+              "name": "Color",
+              "value": "={{ $('fix input').item.json.Color }}"
+            },
+            {
+              "name": "price",
+              "value": "={{ $('fix input').item.json.price }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        592
+      ],
+      "id": "29607598-7acf-40f1-bbe2-e83b0ee78974",
+      "name": "ai_score_2"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\n\nitem = _input.first()\nai_output = item.json.get(\"choices\", [{}])[0].get(\"message\", {}).get(\"content\", \"\")\n\nif not ai_output:\n    item.json = {\"title\": \"\", \"bullets\": [], \"description\": \"\"}\n    return [item]\n\n# ---- TITLE ----\ntitle_match = re.search(\n    r\"TITLE:\\s*([\\s\\S]*?)(?:\\n\\s*\\n(?:BULLET POINTS:|DESCRIPTION:))\",\n    ai_output\n)\ntitle = title_match.group(1).strip() if title_match else \"\"\n\n# ---- BULLET POINTS (optional) ----\nbullets = []\nbullets_match = re.search(\n    r\"BULLET POINTS:\\s*([\\s\\S]*?)(?:\\n\\s*\\nDESCRIPTION:|$)\",\n    ai_output\n)\n\nif bullets_match:\n    raw_bullets = bullets_match.group(1)\n    bullets = [\n        line.strip().lstrip(\"-\").strip()\n        for line in raw_bullets.split(\"\\n\")\n        if line.strip().startswith(\"-\")\n    ]\n\n# ---- DESCRIPTION ----\ndescription_match = re.search(\n    r\"DESCRIPTION:\\s*([\\s\\S]*)\",\n    ai_output\n)\ndescription = description_match.group(1).strip() if description_match else \"\"\n\n# ---- OUTPUT ----\nitem.json = {\n    \"title\": title,\n    \"bullets\": bullets,\n    \"description\": description\n}\n\nreturn [item]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        304
+      ],
+      "id": "3514dbad-d69c-4896-bed5-d67ebbf71625",
+      "name": "fix_ai_output"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        448
+      ],
+      "id": "b0cd68e3-77ea-4904-91ca-f4976c2a0608",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "item = _input.first()\n\n# Extract safely\nname = str(item.json.get(\"name\", \"\"))\ndescription = str(item.json.get(\"description\", \"\"))\ndemand_prob = float(item.json.get(\"demand_prob\", 0))\n\n# Convert JsProxy -> Python list of strings\ndef to_str_list(val):\n    if val is None:\n        return []\n    try:\n        return [str(x) for x in list(val)]\n    except:\n        return [str(val)]\n\ntop_keywords = to_str_list(item.json.get(\"top_keywords\", []))\nmissing_keywords = to_str_list(item.json.get(\"category_missing_keywords\", []))\n\n# -----------------------------\n# Build prompt (NO BULLET POINTS)\n# -----------------------------\nprompt = f\"\"\"\nYou are an expert Amazon SEO copywriter.\nRewrite the product into an Amazon-optimized listing with a strong title and a detailed description only (no bullet points).\n\n==========================\nPRODUCT NAME:\n{name}\n\nORIGINAL DESCRIPTION:\n{description}\n\nPREDICTED DEMAND SCORE:\n{demand_prob:.2f}\n\nHIGH-IMPACT POSITIVE KEYWORDS:\n{\", \".join(top_keywords)}\n\nCATEGORY-AWARE MISSING KEYWORDS:\n{\", \".join(missing_keywords)}\n==========================\n\n### AMAZON STYLE REWRITE RULES ###\n- Output ONLY the Title and Description.\n- NO bullet points at all.\n- NO explanations or extra text.\n- Naturally incorporate all high-impact keywords into the title and description.\n- Include missing keywords only if they are relevant and fit naturally.\n- Never invent specifications or features.\n- Optimize both title and description for Amazon SEO.\n- Description should be engaging, persuasive, and 2–4 paragraphs (max ~300-400 words).\n- Use natural, benefit-focused language that appeals to customers.\n\n### REQUIRED FORMAT (DO NOT CHANGE THIS FORMAT) ###\nTITLE:\n<optimized Amazon title>\n\nDESCRIPTION:\n<full Amazon-style description with all key benefits and features naturally written in paragraph form>\n=================================\nNOW PRODUCE THE AMAZON-LISTING REWRITE:\n\"\"\"\n\n# Pass the prompt forward\nitem.json = {\"prompt\": prompt}\nreturn [item]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        304
+      ],
+      "id": "a2c35d8e-7eae-4419-a658-34a34bd11ffa",
+      "name": "prompt generation"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28235b74-a775-4b40-a775-cb4c797c4c56",
+              "name": "ai_score_1",
+              "value": "={{ $json.demand_prob }}",
+              "type": "number"
+            },
+            {
+              "id": "4cf4aa7d-4679-4ea3-82bb-f9fa1bab54e0",
+              "name": "ai_description_1",
+              "value": "={{ $('fix_ai_output').item.json.description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        304
+      ],
+      "id": "f911bd12-52a7-4976-a279-3c081a671b70",
+      "name": "output_ai_1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28235b74-a775-4b40-a775-cb4c797c4c56",
+              "name": "ai_score_2",
+              "value": "={{ $json.demand_prob }}",
+              "type": "number"
+            },
+            {
+              "id": "4cf4aa7d-4679-4ea3-82bb-f9fa1bab54e0",
+              "name": "ai_description_2",
+              "value": "={{ $('AI Agent1').item.json.output.DESCRIPTION }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        592
+      ],
+      "id": "13913940-dde4-40b8-a9d2-26a5b9eb45a9",
+      "name": "output_ai_2"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Read input items\nold_description = _('Webhook').first().json.body.Description\nold_score = float(_('old_score').first().json.demand_prob or 0)\n\ndata = _input.first().json\n\nai_description_1 = data.get(\"ai_description_1\", \"\")\nai_score_1 = float(data.get(\"ai_score_1\") or 0)\n\nai_description_2 = data.get(\"ai_description_2\", \"\")\nai_score_2 = float(data.get(\"ai_score_2\") or 0)\n\n# Combine all into a list of tuples (description, score)\ncandidates = [\n    (old_description, old_score),\n    (ai_description_1, ai_score_1),\n    (ai_description_2, ai_score_2)\n]\n\n# Find the description with the highest score\nbest_description, best_score = max(candidates, key=lambda x: x[1])\n\n# Return the best result\nreturn {\n    \"best_description\": best_description,\n    \"best_score\": best_score\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        448
+      ],
+      "id": "be8bb1d3-b0ab-409c-ba6a-2ffc60cd9c4f",
+      "name": "BEST DESC"
+    },
+    {
+      "parameters": {
+        "sendTo": "vinclapipav@gmail.com",
+        "subject": "workflow runing",
+        "emailType": "text",
+        "message": "=some one fill the form",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        304
+      ],
+      "id": "a3c0d2bc-9a50-44ab-ae52-f89494508b44",
+      "name": "Email Alert",
+      "webhookId": "58ae4a4d-ebf5-4376-8df7-8be5ba7071e7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "InUY0J0aabb0O0if",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "item = _input.first()\ndata = item.json.get(\"body\", {})\n\nname = data.get(\"Name\", \"\")\ndescription = data.get(\"Description\", \"\")\nbrand = data.get(\"Brand\", \"\")\nmaterial = data.get(\"Material\", \"\")\ncolor = data.get(\"Color\", \"\")\nprice = data.get(\"Price\", \"\")\n\npayload = {\n    \"name\": name,\n    \"description\": description,\n    \"Brand\": brand,\n    \"Material\": material,\n    \"Color\": color,\n    \"price\": float(price) if price else 0,\n}\n\nitem.json = payload\nreturn [item]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        592
+      ],
+      "id": "5133db9a-0525-4450-892a-b058b39dab62",
+      "name": "fix input"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"TITLE\": \"\",\n    \"DESCRIPTION\":\"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        784
+      ],
+      "id": "fd9d6f1b-9728-4fbc-ab93-46745a160888",
+      "name": "fix_output"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        48,
+        784
+      ],
+      "id": "daeed783-00f8-4457-9727-51b330274e0c",
+      "name": "Mistral Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "rfbv5rbf43cEeToe",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1RHDKQ7-3KadKX-H5o7iv6FxgGDF0z733k_fDB8Uz8ag",
+          "mode": "list",
+          "cachedResultName": "projet_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RHDKQ7-3KadKX-H5o7iv6FxgGDF0z733k_fDB8Uz8ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1033829240,
+          "mode": "list",
+          "cachedResultName": "Réponses au formulaire 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RHDKQ7-3KadKX-H5o7iv6FxgGDF0z733k_fDB8Uz8ag/edit#gid=1033829240"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "New Description": "={{ $json.best_description }}",
+            "Horodateur": "={{ $('Webhook').item.json.body.Horodateur }}"
+          },
+          "matchingColumns": [
+            "Horodateur"
+          ],
+          "schema": [
+            {
+              "id": "Horodateur",
+              "displayName": "Horodateur",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Brand",
+              "displayName": "Brand",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Material",
+              "displayName": "Material",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Color",
+              "displayName": "Color",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Price",
+              "displayName": "Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "New Description",
+              "displayName": "New Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1152,
+        448
+      ],
+      "id": "f0ae45b5-ef4d-4682-8297-7995dd5751f2",
+      "name": "output_best_desc",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HpxECoffwtOWG2pz",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "# SmartDesc – AI Product Description Engine",
+        "height": 704,
+        "width": 1872,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -528,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "172352fa-7b45-4dfa-96b0-bd2f73f37261",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "supercritical-gail-uncontrastably.ngrok-free.dev",
+            "user-agent": "Mozilla/5.0 (compatible; Google-Apps-Script; beanserver; +https://script.google.com; id: UAEmdDd-ZYbWfRLNVlKhP2b7GqEZF7y34HNk)",
+            "content-length": "1694",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "35.187.134.11",
+            "x-forwarded-host": "supercritical-gail-uncontrastably.ngrok-free.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "Horodateur": "19/12/2025 15:25:01",
+            "Name": "18pack Travel Bottles for Toiletries,TSA Approved Silicone Travel Containers for Toiletries,Leak Proof Refillable Liqus Shampoo And Conditioner travel Essentials toiletry Bottles",
+            "Description": "Travel Accessories and travel must have: Our 18 pack reusable travel bottles set with 1 toiletry bag , 2 pcs silicone bottles (3 oz/90 ml), 2 pcs silicone bottles (2 oz/60 ml), 2 pcs spray bottles , 4 pcs cream jars, 1 pcs funnels, labels, brush and 4 pcs spatula! Different accessories for your different needs.\n                    Tsa Approved Leak Proof Travel Toiletries Bottles: The silicone bottles are designed with 3-layer leak-proof with a sturdy flip-top lid to protect your bottle from spills, leaks or drips during transport, prevent your expensive cosmetics from leaking during travel, with our unique leak-proof design\n                    Safety PREMIUM SILICONE MATERIAL: This travel size containers are made of high-quality non-toxic BPA-free PET and silicon material, TSA approved, safe, odorless, refillable and reusable lotion bottle\n                    Wide Application: Travel size containers set is used to hold lotion, shampoo, cream, cosmetics and other skin care products perfect containers, products are suitable for travel, camping, or other outdoor activities\n                    Satisfaction Guaranteed: Customer satisfaction has always been our pursuit, if for any reason you aren't happy with our refillable travel bottles, simply email us and we will do everything to make you satisfied with your purchase, our expert team always stands by your side",
+            "Brand": "Tocelffe",
+            "Material": "Silicon",
+            "Color": "Blue",
+            "Price": "10"
+          },
+          "webhookUrl": "http://localhost:5678/webhook-test/googleform",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "fix input",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "ai_score_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hugging face model": {
+      "main": [
+        [
+          {
+            "node": "fix_ai_output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "old_score": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "prompt generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ai_score_1": {
+      "main": [
+        [
+          {
+            "node": "output_ai_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ai_score_2": {
+      "main": [
+        [
+          {
+            "node": "output_ai_2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fix_ai_output": {
+      "main": [
+        [
+          {
+            "node": "ai_score_1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prompt generation": {
+      "main": [
+        [
+          {
+            "node": "hugging face model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "output_ai_1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "output_ai_2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "BEST DESC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BEST DESC": {
+      "main": [
+        [
+          {
+            "node": "output_best_desc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fix input": {
+      "main": [
+        [
+          {
+            "node": "old_score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fix_output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bed3ae5e-1f76-479a-988d-a55bb81fbf0c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9e45bc264a53197211248cd023d66a37cc009c9ef6ac61c9023d17ef1b3cd668"
+  },
+  "id": "Vd37qjpU5DCdNYwY",
+  "tags": []
+}
