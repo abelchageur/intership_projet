@@ -1,0 +1,49 @@
+services:
+
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./n8n/:/home/node/.n8n
+      - ./folder/:/folder
+    environment:
+      # - N8N_ENCRYPTION_KEY=my32characterlongsecurekey123456
+      - N8N_RUNNERS_ENABLED=true
+      - QUEUE_BULL_REDIS_HOST=redis
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+    depends_on:
+      - redis
+    networks:
+      - b2b-network
+
+
+
+  redis:
+    image: redis:6-alpine
+    networks:
+      - b2b-network
+
+  whisper_api:
+    build: ./whisper_api
+    ports:
+      - "5001:5001"
+    networks:
+      - b2b-network
+  
+
+  ml_api:
+    build: ./ml_api
+    ports:
+      - "8000:8000"
+    networks:
+      - b2b-network
+
+
+networks:
+  b2b-network:
+    driver: bridge
+
+
+
