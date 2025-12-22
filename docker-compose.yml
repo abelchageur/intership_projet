@@ -18,20 +18,10 @@ services:
     networks:
       - b2b-network
 
-
-
   redis:
     image: redis:6-alpine
     networks:
       - b2b-network
-
-  whisper_api:
-    build: ./whisper_api
-    ports:
-      - "5001:5001"
-    networks:
-      - b2b-network
-  
 
   ml_api:
     build: ./ml_api
@@ -44,6 +34,7 @@ services:
 networks:
   b2b-network:
     driver: bridge
+
 
 
 
