@@ -45,7 +45,7 @@
         "url": "https://router.huggingface.co/v1/chat/completions",
         "sendHeaders": true,
         "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"Authorization\": \"Bearer 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\",\n  \"Content-Type\": \"application/json\"\n}\n",
+        "jsonHeaders": "{\n  \"Authorization\": \"Bearer <your_hugging_face_key_here>\",\n  \"Content-Type\": \"application/json\"\n}\n",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"model\": \"Qwen/Qwen3-4B-Instruct-2507\",  \n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.prompt) }}\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 200\n}\n",
